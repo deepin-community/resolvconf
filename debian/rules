@@ -1,4 +1,32 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/pkg-info.mk
+
+#export DH_VERBOSE=1
+
 %:
 	dh $@
+
+override_dh_auto_build:
+	debian/test-correct-interface-order
+
+override_dh_auto_test:
+	debian/test-normalization
+
+execute_after_dh_install:
+	sed -i 's/^VERSION=.*/VERSION="$(DEB_VERSION)"/' debian/*/sbin/resolvconf
+
+override_dh_installinit:
+	dh_installinit --no-start
+
+override_dh_installppp:
+	dh_installppp --name=000resolvconf
+
+override_dh_installifupdown:
+	dh_installifupdown --name=resolvconf
+	dh_installifupdown --name=000resolvconf
+
+execute_after_dh_installsystemd:
+	dh_installsystemd --name=resolvconf-pull-resolved
+
+.PHONY: override_dh_auto_test override_dh_installinit
